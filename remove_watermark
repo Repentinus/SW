@@ -1,0 +1,54 @@
+#! /bin/bash
+
+# Remove "Solidworks Student Edition. For Academic Use Only" watermarks
+# from your PDFs. Those can be annoying when they cover up your tables and
+# stuff like that. Authors of technical drawings, even student authors,
+# deserve full control over how their drawings are displayed.
+
+# Copyright © 2014 Repentinus
+
+# Copying and distribution of this file, with or without modification,
+# are permitted in any medium without royalty provided the copyright
+# notice and this notice are preserved.  This file is offered as-is,
+# without any warranty.
+
+if [[ $# -lt 1 ]]; then
+	echo 'Usage: remove_watermark file1 [file*]'
+	exit 1
+fi
+
+for file in "$@"
+do
+	tmp=$(mktemp -t remove_watermark.$$.XXXXXXXXXX)
+	e=$?
+	tmp2=$(mktemp -t remove_watermark.$$.XXXXXXXXXX)
+	let "e = $e + $?"
+	if [[ e -ne 0 ]]; then
+		echo "Failed to create temporary files."
+		exit 2
+	fi
+	qpdf=$(qpdf --stream-data=uncompress "$file" $tmp)
+	if [[ $? -ne 0 ]]; then
+		echo "Failed to uncompress $file. Skipping…"
+		echo $qpdf
+		rm $tmp $tmp2
+		continue
+	else
+		sed=$(sed -i 's/00360052004F004C0047003A00520055004E005600030036005700580047004800510057000300280047004C0057004C005200510011>Tj//g' $tmp && sed -i 's/<00030029005200550003002400460044004700480050004C00460003003800560048000300320051004F005C0011>Tj//g' $tmp)
+		if [[ $? -ne 0 ]]; then
+			echo "Watermark deletion for $file, $tmp failed. Skipping…"
+			echo $sed
+			rm $tmp $tmp2
+			continue
+		fi
+		qpdf=$(qpdf --stream-data=compress $tmp $tmp2)
+#		if [[ $? -ne 0 ]]; then
+#			echo "Compression of $file, $tmp failed. Skipping…"
+#			echo $qpdf
+#			rm $tmp $tmp2
+#			continue
+#		else
+			mv $tmp2 "$file"
+#		fi
+	fi
+done
