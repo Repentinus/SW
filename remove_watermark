@@ -1,17 +1,5 @@
 #! /bin/bash
 
-# Remove "Solidworks Student Edition. For Academic Use Only" watermarks
-# from your PDFs. Those can be annoying when they cover up your tables and
-# stuff like that. Authors of technical drawings, even student authors,
-# deserve full control over how their drawings are displayed.
-
-# Copyright © 2014 Repentinus
-
-# Copying and distribution of this file, with or without modification,
-# are permitted in any medium without royalty provided the copyright
-# notice and this notice are preserved.  This file is offered as-is,
-# without any warranty.
-
 if [[ $# -lt 1 ]]; then
 	echo 'Usage: remove_watermark file1 [file*]'
 	exit 1
@@ -48,7 +36,8 @@ do
 #			rm $tmp $tmp2
 #			continue
 #		else
-			mv $tmp2 "$file"
+		gs=$(gs -o $tmp -sDEVICE=pdfwrite -dPFDSETTINGS=/prepress $tmp2)
+			mv $tmp "$file"
 #		fi
 	fi
 done
